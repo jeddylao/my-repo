@@ -1,0 +1,222 @@
+Imports System
+Imports System.Data
+Imports System.Web
+Imports System.Diagnostics.Process
+Imports System.Xml
+Imports System.Text
+Imports System.IO
+Imports System.Net
+Imports System.String
+Imports System.Collections
+
+
+Public Class RPNCalc
+    Inherits System.Windows.Forms.Form
+
+
+#Region " Windows Form Designer generated code "
+
+    Public Sub New()
+        MyBase.New()
+
+        'This call is required by the Windows Form Designer.
+        InitializeComponent()
+
+        'Add any initialization after the InitializeComponent() call
+
+    End Sub
+
+    'Form overrides dispose to clean up the component list.
+    Protected Overloads Overrides Sub Dispose(ByVal disposing As Boolean)
+        If disposing Then
+            If Not (components Is Nothing) Then
+                components.Dispose()
+            End If
+        End If
+        MyBase.Dispose(disposing)
+    End Sub
+
+    'Required by the Windows Form Designer
+    Private components As System.ComponentModel.IContainer
+
+
+    'NOTE: The following procedure is required by the Windows Form Designer
+    'It can be modified using the Windows Form Designer.  
+    'Do not modify it using the code editor.
+    Friend WithEvents txt_Message As System.Windows.Forms.TextBox
+    Friend WithEvents lbl_Message As System.Windows.Forms.Label
+    Friend WithEvents lbl_Title As System.Windows.Forms.Label
+    Friend WithEvents Label1 As System.Windows.Forms.Label
+    Friend WithEvents btn_Calc As System.Windows.Forms.Button
+    Friend WithEvents txt_input As System.Windows.Forms.TextBox
+
+
+
+    <System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
+        Me.lbl_Title = New System.Windows.Forms.Label()
+        Me.txt_Message = New System.Windows.Forms.TextBox()
+        Me.lbl_Message = New System.Windows.Forms.Label()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.btn_Calc = New System.Windows.Forms.Button()
+        Me.txt_input = New System.Windows.Forms.TextBox()
+        Me.SuspendLayout()
+        '
+        'lbl_Title
+        '
+        Me.lbl_Title.Font = New System.Drawing.Font("Microsoft Sans Serif", 16.0!, CType(((System.Drawing.FontStyle.Bold Or System.Drawing.FontStyle.Italic) _
+                Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lbl_Title.Location = New System.Drawing.Point(8, 8)
+        Me.lbl_Title.Name = "lbl_Title"
+        Me.lbl_Title.Size = New System.Drawing.Size(264, 32)
+        Me.lbl_Title.TabIndex = 18
+        Me.lbl_Title.Text = "RPN Calculator"
+        '
+        'txt_Message
+        '
+        Me.txt_Message.Location = New System.Drawing.Point(120, 77)
+        Me.txt_Message.Multiline = True
+        Me.txt_Message.Name = "txt_Message"
+        Me.txt_Message.Size = New System.Drawing.Size(197, 34)
+        Me.txt_Message.TabIndex = 19
+        '
+        'lbl_Message
+        '
+        Me.lbl_Message.Location = New System.Drawing.Point(40, 77)
+        Me.lbl_Message.Name = "lbl_Message"
+        Me.lbl_Message.Size = New System.Drawing.Size(74, 16)
+        Me.lbl_Message.TabIndex = 20
+        Me.lbl_Message.Text = "Answer ="
+        '
+        'Label1
+        '
+        Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!)
+        Me.Label1.Location = New System.Drawing.Point(40, 40)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(73, 23)
+        Me.Label1.TabIndex = 44
+        Me.Label1.Text = "RPN input:"
+        Me.Label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
+        'btn_Calc
+        '
+        Me.btn_Calc.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.5!)
+        Me.btn_Calc.Location = New System.Drawing.Point(341, 80)
+        Me.btn_Calc.Name = "btn_Calc"
+        Me.btn_Calc.Size = New System.Drawing.Size(96, 31)
+        Me.btn_Calc.TabIndex = 40
+        Me.btn_Calc.Text = "Calculate"
+        '
+        'txt_input
+        '
+        Me.txt_input.Location = New System.Drawing.Point(120, 40)
+        Me.txt_input.Name = "txt_input"
+        Me.txt_input.Size = New System.Drawing.Size(488, 20)
+        Me.txt_input.TabIndex = 43
+        Me.txt_input.Text = "Enter valid RPN string"
+        '
+        'RPNCalc
+        '
+        Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
+        Me.ClientSize = New System.Drawing.Size(624, 153)
+        Me.Controls.Add(Me.txt_Message)
+        Me.Controls.Add(Me.lbl_Message)
+        Me.Controls.Add(Me.lbl_Title)
+        Me.Controls.Add(Me.Label1)
+        Me.Controls.Add(Me.btn_Calc)
+        Me.Controls.Add(Me.txt_input)
+        Me.Name = "RPNCalc"
+        Me.ResumeLayout(False)
+        Me.PerformLayout()
+
+    End Sub
+
+#End Region
+
+
+#Region "Events"
+
+
+    Private Sub on_input_Focus(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles txt_input.Click
+
+        txt_input.Clear()
+
+    End Sub
+
+    Private Sub on_Enter_Press(ByVal sender As System.Object, ByVal e As System.Windows.Forms.PreviewKeyDownEventArgs) Handles txt_input.PreviewKeyDown
+
+        If e.KeyCode = Keys.Return Then
+            If txt_input.Text.Length = 0 Then
+                txt_Message.Text = "Error invalid input: Cannot be blank"
+            ElseIf Not txt_input.Text.Equals("Enter valid RPN string") Then
+                txt_Message.Text = CalculatedRPN()
+            End If
+        End If
+
+    End Sub
+
+    Private Sub btn_DataGen_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btn_Calc.Click
+
+        If txt_input.Text.Length = 0 Then
+            txt_Message.Text = "Error invalid input: Cannot be blank"
+        Else
+            txt_Message.Text = CalculatedRPN()
+        End If
+
+    End Sub
+
+    Private Function CalculatedRPN() As String
+        Dim result As New Decimal
+        Dim Operand As New Stack()
+        Dim valid As Boolean = False
+        Dim inputStr As String = txt_input.Text.Trim(" ")
+
+        Dim Inputs As String() = inputStr.Split(" ")
+
+        Try
+            For Each op As String In Inputs
+                Select Case op
+                    Case "+"
+                        result = Operand.Pop() + Operand.Pop()
+                        Operand.Push(result)
+                        valid = True
+                    Case "-"
+                        Dim p1 As Decimal = Operand.Pop()
+                        Dim p2 As Decimal = Operand.Pop()
+                        result = p2 - p1
+                        Operand.Push(result)
+                        valid = True
+                    Case "*"
+                        result = Operand.Pop() * Operand.Pop()
+                        Operand.Push(result)
+                        valid = True
+                    Case "/"
+                        Dim p1 As Decimal = Operand.Pop()
+                        Dim p2 As Decimal = Operand.Pop()
+                        result = p2 / p1
+                        Operand.Push(result)
+                        valid = True
+                    Case Else
+                        Operand.Push(Convert.ToDecimal(op))
+                End Select
+            Next
+
+        Catch ex As Exception
+            If ex.Message.Equals("Stack empty.") Then
+                Return "Invalid number of operators and/or operands"
+            End If
+
+            Return ex.Message
+
+        End Try
+
+        If valid Then
+            Return result.ToString
+        End If
+
+        Return "Please enter valid input."
+    End Function
+
+#End Region
+
+End Class
+
